@@ -1,0 +1,60 @@
+<!doctype html><html lang="hi"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f172a"><link rel="manifest" href="manifest.webmanifest">
+<title>Studiora</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#111827;--muted:#64748b;--brand:#2563eb;--line:#e5e7eb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#0f172a;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:22px;font-weight:800}.sub{font-size:11px;color:#cbd5e1}
+main{max-width:900px;margin:auto;padding:14px 14px 88px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.big{font-size:28px;font-weight:800}.muted,.stat{color:var(--muted);font-size:13px}
+button,select,input,textarea{font:inherit}button{border:0;border-radius:12px;padding:10px 13px;background:var(--brand);color:#fff;font-weight:700}
+button.secondary{background:#eef2ff;color:#1e40af}select,input,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.progress{height:9px;background:#e5e7eb;border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;background:linear-gradient(90deg,#2563eb,#7c3aed)}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between}.item{padding:11px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border:0}.wrap{display:flex;flex-wrap:wrap;gap:8px}.timer{font-size:48px;text-align:center;font-weight:900}
+.hidden{display:none!important}nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:7px 3px;z-index:10}
+nav button{background:transparent;color:#64748b;padding:6px 3px;font-size:11px}.active{color:#2563eb!important}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}nav{position:static;max-width:900px;margin:auto;border:0;background:transparent}}
+</style></head><body>
+<header><div><div class="logo">📚 Studiora</div><div class="sub">Government Exam Study OS</div></div><button class="secondary" onclick="exportData()">Backup</button></header>
+<main id="app"></main><nav id="nav"></nav>
+<script>
+const EXAMS={
+"SSC CGL":["Quantitative Aptitude","Reasoning","English","General Awareness"],
+"Railway NTPC":["Maths","General Intelligence","General Awareness"],
+"UPSC CSE":["History","Geography","Polity","Economy","Environment","Science & Tech"],
+"Banking":["Quant","Reasoning","English","General Awareness"],
+"Rajasthan State Exams":["GK","Rajasthan GK","Hindi","Reasoning","Maths"]
+};
+const TOPICS=["Number System","Percentage","Ratio","Profit & Loss","Time & Work","Time & Distance","Algebra","Geometry","Series","Coding-Decoding","Grammar","Vocabulary","History","Geography","Polity","Science","Current Affairs"];
+const KEY="studiora_v7";
+let S=JSON.parse(localStorage.getItem(KEY)||"null")||{exam:"SSC CGL",done:{},plan:[],notes:{},minutes:0,streak:0,lastStudy:"",revs:{}};
+function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+function nav(active){let n=[["home","⌂","Home"],["syllabus","✓","Syllabus"],["plan","☷","Planner"],["timer","◷","Timer"],["revision","↻","Revision"],["notes","✎","Notes"],["stats","▥","Stats"]];document.getElementById("nav").innerHTML=n.map(x=>`<button class="${active==x[0]?"active":""}" onclick="page('${x[0]}')">${x[1]}<br>${x[2]}</button>`).join("")}
+function page(p){nav(p);let a=document.getElementById("app");({home,syllabus,plan,timer,revision,notes,stats}[p])(a)}
+function selectExam(){return `<select onchange="S.exam=this.value;save();page('home')">${Object.keys(EXAMS).map(e=>`<option ${S.exam==e?"selected":""}>${e}</option>`).join("")}</select>`}
+function markStudy(){let d=new Date().toISOString().slice(0,10);if(S.lastStudy!=d){S.streak++;S.lastStudy=d}}
+function home(a){let done=TOPICS.filter(t=>S.done[S.exam+"|"+t]).length,p=Math.round(done/TOPICS.length*100);a.innerHTML=`<h1>Namaste 👋</h1><div class="card"><h2>Target Exam</h2>${selectExam()}<p class="stat">${done}/${TOPICS.length} topics complete</p><div class="progress"><i style="width:${p}%"></i></div></div><div class="grid"><div class="card"><div class="stat">Syllabus</div><div class="big">${p}%</div></div><div class="card"><div class="stat">Study minutes</div><div class="big">${S.minutes}</div></div><div class="card"><div class="stat">Streak</div><div class="big">${S.streak} 🔥</div></div><div class="card"><div class="stat">Revisions</div><div class="big">${Object.keys(S.revs).length}</div></div></div><div class="card"><h2>Today's focus</h2><p class="muted">Study → notes → revision. Everything is saved on this device.</p><div class="wrap"><button onclick="page('syllabus')">Syllabus</button><button onclick="page('timer')">Timer</button><button onclick="page('revision')">Revision</button></div></div>`}
+function syllabus(a){a.innerHTML=`<h1>Syllabus</h1>${selectExam()}<div class="card">${TOPICS.map((t,i)=>{let k=S.exam+"|"+t,d=!!S.done[k];return `<div class="item row"><div><b>${i+1}. ${t}</b><div class="stat">${EXAMS[S.exam][i%EXAMS[S.exam].length]}</div></div><button class="${d?"secondary":""}" onclick="toggle('${t}')">${d?"✓ Done":"Mark done"}</button></div>`}).join("")}</div>`}
+function toggle(t){let k=S.exam+"|"+t;S.done[k]=!S.done[k];if(S.done[k]){markStudy();S.revs[k]=S.revs[k]||{round:0,next:"today"}}save();page("syllabus")}
+function plan(a){a.innerHTML=`<h1>Daily Planner</h1><div class="card"><input id="task" placeholder="Task e.g. Percentage PYQ"><input id="mins" type="number" placeholder="Minutes" style="margin-top:8px"><button style="margin-top:8px" onclick="addTask()">Add task</button></div><div class="card">${S.plan.length?S.plan.map((x,i)=>`<div class="item row"><div><b>${x.t}</b><div class="stat">${x.m} min</div></div><button class="${x.done?"secondary":""}" onclick="S.plan[${i}].done=!S.plan[${i}].done;save();page('plan')">${x.done?"✓":"Done"}</button></div>`).join(""):"<p class='muted'>No tasks yet.</p>"}</div>`}
+function addTask(){let t=document.getElementById("task").value.trim(),m=+document.getElementById("mins").value||30;if(t){S.plan.push({t,m,done:false});save();page("plan")}}
+let interval=null,seconds=0;
+function timer(a){a.innerHTML=`<h1>Study Timer</h1><div class="card"><div id="clock" class="timer">${fmt(seconds)}</div><div class="wrap" style="justify-content:center"><button onclick="start()">Start</button><button class="secondary" onclick="pause()">Pause</button><button class="secondary" onclick="finish()">Finish</button></div><p class="muted">Finish adds completed minutes to your study total.</p></div>`}
+function fmt(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function start(){if(interval)return;interval=setInterval(()=>{seconds++;let c=document.getElementById("clock");if(c)c.textContent=fmt(seconds)},1000)}
+function pause(){clearInterval(interval);interval=null}
+function finish(){pause();S.minutes+=Math.floor(seconds/60);markStudy();seconds=0;save();page("timer")}
+function revision(a){let items=Object.entries(S.revs);a.innerHTML=`<h1>Smart Revision</h1><div class="card"><p class="muted">Cycle: 1 → 3 → 7 → 15 → 30 days.</p>${items.length?items.map(([k,v])=>`<div class="item"><b>${k.split("|")[1]}</b><div class="stat">Round ${v.round||0} • Next ${v.next||"today"}</div><button onclick="revise('${k}')">Revise now</button></div>`).join(""):"<p class='muted'>Mark syllabus topics complete to create revision items.</p>"}</div>`}
+function revise(k){let v=S.revs[k]||{round:0};v.round=Math.min(v.round+1,5);let days=[1,3,7,15,30][v.round-1];let d=new Date();d.setDate(d.getDate()+days);v.next=d.toISOString().slice(0,10);S.revs[k]=v;save();page("revision")}
+function notes(a){let ts=TOPICS;a.innerHTML=`<h1>Notes</h1><div class="card"><select id="topic" onchange="loadNote()">${ts.map(t=>`<option>${t}</option>`).join("")}</select><textarea id="note" rows="12" placeholder="Write short notes..."></textarea><button style="margin-top:8px" onclick="saveNote()">Save note</button></div>`;loadNote()}
+function loadNote(){let t=document.getElementById("topic");let n=document.getElementById("note");if(t&&n)n.value=S.notes[S.exam+"|"+t.value]||""}
+function saveNote(){let t=document.getElementById("topic").value;S.notes[S.exam+"|"+t]=document.getElementById("note").value;save();alert("Note saved")}
+function stats(a){let d=TOPICS.filter(t=>S.done[S.exam+"|"+t]).length;a.innerHTML=`<h1>Analytics</h1><div class="grid"><div class="card"><div class="stat">Topics</div><div class="big">${d}/${TOPICS.length}</div></div><div class="card"><div class="stat">Minutes</div><div class="big">${S.minutes}</div></div><div class="card"><div class="stat">Tasks done</div><div class="big">${S.plan.filter(x=>x.done).length}</div></div><div class="card"><div class="stat">Notes</div><div class="big">${Object.keys(S.notes).length}</div></div></div><div class="card"><h2>Backup</h2><button onclick="exportData()">Export JSON</button><button class="secondary" onclick="document.getElementById('file').click()">Import JSON</button><input id="file" class="hidden" type="file" accept=".json" onchange="importData(event)"></div>`}
+function exportData(){let b=new Blob([JSON.stringify(S,null,2)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="studiora-backup.json";a.click();URL.revokeObjectURL(u)}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{S=JSON.parse(r.result);save();page("home");alert("Backup restored")}catch(_){alert("Invalid backup")}};r.readAsText(f)}
+if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+page("home");
+</script></body></html>

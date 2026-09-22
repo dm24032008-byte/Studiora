@@ -1,0 +1,8 @@
+{
+  "name": "Studiora — Government Exam Study OS",
+  "short_name": "Studiora",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#0f172a"
+}
